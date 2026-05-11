@@ -33,6 +33,16 @@ class Notifier:
                         "inline": True
                     },
                     {
+                        "name": "⛽ Paliwo",
+                        "value": offer.get('fuel_type', 'N/A'),
+                        "inline": True
+                    },
+                    {
+                        "name": "🔧 Pojemność",
+                        "value": f"{offer.get('engine_capacity', 'N/A')} cm³",
+                        "inline": True
+                    },
+                    {
                         "name": "📍 Lokalizacja",
                         "value": offer['location'] if offer['location'] else "N/A",
                         "inline": True
@@ -49,6 +59,10 @@ class Notifier:
                     }
                 ]
             }
+            
+            # Add image if available
+            if offer.get('image_url'):
+                embed["image"] = {"url": offer['image_url']}
             
             payload = {
                 "embeds": [embed]

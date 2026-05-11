@@ -19,6 +19,10 @@ class Parser:
             if not data['title']:
                 return None
             
+            # Filter out: Seria 1
+            if 'seria 1' in data['title'].lower() or data['title'].lower().startswith('bmw 1'):
+                return None
+            
             # Price from h3
             price_h3 = article.find('h3')
             if price_h3:
@@ -30,9 +34,17 @@ class Parser:
             else:
                 data['price'] = None
             
+            # Skip if price > 10000 PLN
+            if data['price'] and data['price'] > 10000:
+                return None
+            
             # URL from first link
             link = article.find('a', href=re.compile(r'/osobowe/oferta/'))
             data['url'] = link.get('href') if link else None
+            
+            # Image URL from img tag
+            img_tag = article.find('img')
+            data['image_url'] = img_tag.get('src') if img_tag else None
             
             # Extract details from text
             text = article.get_text()
@@ -56,6 +68,27 @@ class Parser:
                     data['year'] = None
             else:
                 data['year'] = None
+            
+            # Fuel type: "fuel_typeBenzynagearbox" pattern - stop at "gearbox"
+            fuel_match = re.search(r'fuel_type([A-Za-z]+?)gearbox', text)
+            data['fuel_type'] = fuel_match.group(1) if fuel_match else None
+            
+            # Engine capacity: "1995 cm3" or "2000cm3" etc - NOT "Seria X1991 cm3"
+            # First remove the title part to avoid "Seria 51991 cm3"
+            title_removed = text.replace(data['title'], '')
+            capacity_match = re.search(r'(?<![A-Za-z0-9])(\d{3,4})\s*cm3', title_removed)
+            if capacity_match:
+                try:
+                    cap = int(capacity_match.group(1))
+                    # Valid engine capacities are typically 500-5000 cm3
+                    if 500 <= cap <= 5000:
+                        data['engine_capacity'] = cap
+                    else:
+                        data['engine_capacity'] = None
+                except ValueError:
+                    data['engine_capacity'] = None
+            else:
+                data['engine_capacity'] = None
             
             # Location: "Wrocław (Dolnośląskie)"
             location_match = re.search(r'([A-Z][a-ząćęłńóśźż\s]+?)\s*\(', text)

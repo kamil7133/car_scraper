@@ -22,6 +22,8 @@ class Database:
             location TEXT,
             url TEXT NOT NULL,
             image_url TEXT,
+            fuel_type TEXT,
+            engine_capacity INTEGER,
             score INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             notified BOOLEAN DEFAULT 0
@@ -48,8 +50,8 @@ class Database:
         cursor = conn.cursor()
         
         cursor.execute("""
-        INSERT INTO offers (id, title, price, year, mileage, location, url, score, notified)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO offers (id, title, price, year, mileage, location, url, image_url, fuel_type, engine_capacity, score, notified)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             offer['id'],
             offer['title'],
@@ -58,6 +60,9 @@ class Database:
             offer['mileage'],
             offer['location'],
             offer['url'],
+            offer.get('image_url'),
+            offer.get('fuel_type'),
+            offer.get('engine_capacity'),
             offer['score'],
             1  # Mark as notified
         ))
@@ -92,3 +97,12 @@ class Database:
         
         conn.close()
         return count
+    
+    def clear_all(self):
+        """Delete all offers from database (for fresh start)"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("DELETE FROM offers")
+        conn.commit()
+        conn.close()
