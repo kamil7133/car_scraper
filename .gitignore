@@ -1,2 +1,4 @@
+data/offers.db
+data/offers.db-journal
+logs/
 .env
-/data
